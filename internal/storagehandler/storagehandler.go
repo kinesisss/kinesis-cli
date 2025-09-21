@@ -23,11 +23,11 @@ func CreateStorage(storageDir string) (os.File, error){
 }
 
 func WriteToStorageFile(storagePath string, data []byte, perm os.FileMode) {
-	fmt.Printf("... persisting your task")
+	fmt.Printf("... persisting your task\n")
 	werr := os.WriteFile(storagePath, data, perm)
 	if werr != nil{
-		fmt.Printf("something went wrong when persisting your file")
+		fmt.Printf("something went wrong when persisting your file\n")
 		fmt.Printf(werr.Error())
 	}
-	fmt.Printf("file has been persisted succesfully")
+	fmt.Printf("file has been persisted succesfully\n")
 }
