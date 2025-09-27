@@ -1,9 +1,18 @@
-package storagehandler
+package storageHandler
 
 import (
 	"os"
-	"fmt"
+	"fmt"	
 )
+
+type UserTask struct{
+	Name string
+	CreatedAt string
+}
+
+func (u UserTask) RenderUserTask() string{
+	return fmt.Sprintf("<%v> task created at <%v> \n", u.Name, u.CreatedAt)
+}
 
 func CheckStorage(dirName string) (bool, error){
 	_, err := os.Stat(dirName)
@@ -30,4 +39,14 @@ func WriteToStorageFile(storagePath string, data []byte, perm os.FileMode) {
 		fmt.Printf(werr.Error())
 	}
 	fmt.Printf("file has been persisted succesfully\n")
+}
+
+func RetrieveTaskData(storagePath string) {
+	data, err := os.ReadFile(storagePath)
+	if err != nil{
+		fmt.Printf("something went wrong when reading your file: \n")
+		fmt.Printf(err.Error())
+	}
+	fmt.Printf("the retrieved data was: ")
+	os.Stdout.Write(data)
 }
