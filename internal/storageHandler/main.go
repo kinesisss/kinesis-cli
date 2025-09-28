@@ -4,19 +4,31 @@ import (
 	"os"
 	"fmt"
 	"encoding/json"	
+	"time"
 )
 
 type UserTask struct{
+	Id int
 	Name string
+	State string
 	CreatedAt string
+}
+
+func (u UserTask) RenderUserTask() string{
+	return fmt.Sprintf("<%v> task created at <%v> \n", u.Name, u.CreatedAt)
+}
+
+func (u UserTask) ModifyState(state string) {
+	u.State = state
 }
 
 type TaskStorage struct{
 	DailyStore map[string][]UserTask
 }
 
-func (u UserTask) RenderUserTask() string{
-	return fmt.Sprintf("<%v> task created at <%v> \n", u.Name, u.CreatedAt)
+func CreateDateKey(targetTime time.Time) string{
+	year, month, day := targetTime.Date()
+	return fmt.Sprintf("%v-%v-%v", year, month, day)
 }
 
 func CheckStorage(dirName string) (bool, error){
@@ -66,4 +78,36 @@ func RetrieveTaskData(storagePath string) (TaskStorage, error){
 		return StorageInstance, jerr
 	}
 	return StorageInstance, nil
+}
+
+func MarkStateAsDone(id int, storagePath string){
+	TaskState, terr := RetrieveTaskData(storagePath)
+	if terr != nil{
+		fmt.Printf("We can't modify the state of your task")
+		return
+	}
+	dateKey := CreateDateKey(time.Now())
+	for i, uTask := range TaskState.DailyStore[dateKey]{
+		if uTask.Id == id{
+			TaskState.DailyStore[dateKey][i].State = "DONE"
+			jbytes, _ := json.Marshal(TaskState)
+			WriteToStorageFile(storagePath, jbytes, 0666)
+		}
+	}
+	RenderTaskData(storagePath)
+}
+
+func RenderTaskData(storagePath string){
+	TaskState, terr := RetrieveTaskData(storagePath)
+	if terr != nil{
+		fmt.Printf("We can't render your tasks")
+		return
+	}
+	dateKey := CreateDateKey(time.Now())
+	fmt.Printf("\nTask State [%v]:", dateKey)
+	fmt.Printf("\n")
+	for _, uTask := range TaskState.DailyStore[dateKey]{
+		fmt.Printf("task: [%v] description: [%v] -- state: [%v]\n", uTask.Id, uTask.Name, uTask.State)
+	}
+	fmt.Printf("\n")
 }

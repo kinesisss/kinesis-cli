@@ -7,22 +7,19 @@ import (
 	"flag"
 )
 
-func CreateDateKey(targetTime time.Time) string{
-	year, month, day := targetTime.Date()
-	return fmt.Sprintf("%v-%v-%v", year, month, day)
-}
-
 func AppendTaskToStorage(taskName string, creationTime time.Time, storagePath string) {
-	userTask := storageHandler.UserTask{
-		Name: taskName,
-		CreatedAt: creationTime.String(),
-	}
 	StorageInstance, err := storageHandler.RetrieveTaskData(storagePath)
 	if err != nil {
 		fmt.Printf("--- we had an error retrieving the data stored in the file ---")
 		fmt.Printf(err.Error())
 	}
-	dateKey := CreateDateKey(creationTime)
+	dateKey := storageHandler.CreateDateKey(creationTime)
+	userTask := storageHandler.UserTask{
+		Id: len(StorageInstance.DailyStore[dateKey]),
+		Name: taskName,
+		State: "PENDING",
+		CreatedAt: creationTime.String(),
+	}
 	StorageInstance.DailyStore[dateKey] = append(StorageInstance.DailyStore[dateKey], userTask)
 	jbytes, jerr := json.Marshal(StorageInstance)
 	if jerr != nil {
@@ -32,8 +29,9 @@ func AppendTaskToStorage(taskName string, creationTime time.Time, storagePath st
 }
 
 func main(){
-	task := flag.String("task", "<not-called>", "the task flag allows you to record a flag")
+	task := flag.String("task", "<not-called>", "the task flag allows you to record a task")
 	state := flag.Bool("state", false, "the state flag allows you to retrieve the current state of your tasks")
+	done := flag.Int("done", -1, "the mod flag allows you to modify the state of a task")
 	flag.Parse()
 	storagePath := "./storage/tasks.json"
 	if *task != "<not-called>"{
@@ -50,8 +48,9 @@ func main(){
  		AppendTaskToStorage(*task, timeNow, storagePath)			
 	} 
 	if *state{
-		fmt.Printf("retrieving your tasks....\n")
-		storageHandler.RetrieveTaskData(storagePath)
+		storageHandler.RenderTaskData(storagePath)
 	}
-
+    if *done != -1 {
+		storageHandler.MarkStateAsDone(*done, storagePath)
+	}
 }
