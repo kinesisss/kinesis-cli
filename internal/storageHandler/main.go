@@ -34,9 +34,7 @@ func CreateStorage(storageDir string) (os.File, error){
 		return *rFilePtr, fileErr
 	}
 	dummyTask := TaskStorage{
-		DailyStore: map[string][]UserTask{ 
-			"00-00-00": []UserTask{},
-		},
+		DailyStore: map[string][]UserTask{},
 	}
 	jbytes, jerr := json.Marshal(dummyTask)
 	if jerr != nil{
