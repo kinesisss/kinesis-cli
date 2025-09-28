@@ -7,12 +7,28 @@ import (
 	"flag"
 )
 
-func createTask(taskName string, creationTime time.Time) storageHandler.UserTask{
+func CreateDateKey(targetTime time.Time) string{
+	year, month, day := targetTime.Date()
+	return fmt.Sprintf("%v-%v-%v", year, month, day)
+}
+
+func AppendTaskToStorage(taskName string, creationTime time.Time, storagePath string) {
 	userTask := storageHandler.UserTask{
 		Name: taskName,
 		CreatedAt: creationTime.String(),
 	}
-	return userTask
+	StorageInstance, err := storageHandler.RetrieveTaskData(storagePath)
+	if err != nil {
+		fmt.Printf("--- we had an error retrieving the data stored in the file ---")
+		fmt.Printf(err.Error())
+	}
+	dateKey := CreateDateKey(creationTime)
+	StorageInstance.DailyStore[dateKey] = append(StorageInstance.DailyStore[dateKey], userTask)
+	jbytes, jerr := json.Marshal(StorageInstance)
+	if jerr != nil {
+		fmt.Printf("... something went wrong when transforming your task \n")
+	}
+	storageHandler.WriteToStorageFile(storagePath, jbytes, 0666)	
 }
 
 func main(){
@@ -22,13 +38,7 @@ func main(){
 	storagePath := "./storage/tasks.json"
 	if *task != "<not-called>"{
 		timeNow := time.Now()
-		currentTask := createTask(*task, timeNow)		
-		fmt.Printf(currentTask.RenderUserTask())
 		canStore, _ := storageHandler.CheckStorage(storagePath)
-		jbytes, jerr := json.Marshal(currentTask)
-		if jerr != nil {
-			fmt.Printf("... something went transforming your task\n")
-		}
 		if !canStore{
 			fmt.Printf("... setting up your storage system\n")
 			_, err := storageHandler.CreateStorage(storagePath)
@@ -36,8 +46,8 @@ func main(){
 				fmt.Printf("something happened while setting up your storage\n")
 				fmt.Printf(err.Error())
 			}
-		} 
-		storageHandler.WriteToStorageFile(storagePath, jbytes, 0666)	
+		}
+ 		AppendTaskToStorage(*task, timeNow, storagePath)			
 	} 
 	if *state{
 		fmt.Printf("retrieving your tasks....\n")

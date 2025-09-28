@@ -2,12 +2,17 @@ package storageHandler
 
 import (
 	"os"
-	"fmt"	
+	"fmt"
+	"encoding/json"	
 )
 
 type UserTask struct{
 	Name string
 	CreatedAt string
+}
+
+type TaskStorage struct{
+	DailyStore map[string][]UserTask
 }
 
 func (u UserTask) RenderUserTask() string{
@@ -28,6 +33,16 @@ func CreateStorage(storageDir string) (os.File, error){
 	if fileErr != nil{
 		return *rFilePtr, fileErr
 	}
+	dummyTask := TaskStorage{
+		DailyStore: map[string][]UserTask{ 
+			"00-00-00": []UserTask{},
+		},
+	}
+	jbytes, jerr := json.Marshal(dummyTask)
+	if jerr != nil{
+		fmt.Printf("something went wrong transforming your struct")
+	}
+	WriteToStorageFile(storageDir, jbytes, 0666)
 	return *rFilePtr, nil
 }
 
@@ -41,12 +56,16 @@ func WriteToStorageFile(storagePath string, data []byte, perm os.FileMode) {
 	fmt.Printf("file has been persisted succesfully\n")
 }
 
-func RetrieveTaskData(storagePath string) {
+func RetrieveTaskData(storagePath string) (TaskStorage, error){
 	data, err := os.ReadFile(storagePath)
 	if err != nil{
 		fmt.Printf("something went wrong when reading your file: \n")
 		fmt.Printf(err.Error())
 	}
-	fmt.Printf("the retrieved data was: ")
-	os.Stdout.Write(data)
+	var StorageInstance TaskStorage
+	jerr := json.Unmarshal(data, &StorageInstance)
+	if jerr != nil{
+		return StorageInstance, jerr
+	}
+	return StorageInstance, nil
 }
