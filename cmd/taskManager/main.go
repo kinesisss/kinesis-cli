@@ -38,7 +38,6 @@ func main(){
 		timeNow := time.Now()
 		canStore, _ := storageHandler.CheckStorage(storagePath)
 		if !canStore{
-			fmt.Printf("... setting up your storage system\n")
 			_, err := storageHandler.CreateStorage(storagePath)
 			if err != nil {
 				fmt.Printf("something happened while setting up your storage\n")
