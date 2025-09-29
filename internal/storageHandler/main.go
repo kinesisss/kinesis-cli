@@ -18,7 +18,7 @@ func (u UserTask) RenderUserTask() string{
 	return fmt.Sprintf("<%v> task created at <%v> \n", u.Name, u.CreatedAt)
 }
 
-func (u UserTask) ModifyState(state string) {
+func (u *UserTask) ModifyState(state string) {
 	u.State = state
 }
 
@@ -89,7 +89,7 @@ func MarkStateAsDone(id int, storagePath string){
 	dateKey := CreateDateKey(time.Now())
 	for i, uTask := range TaskState.DailyStore[dateKey]{
 		if uTask.Id == id{
-			TaskState.DailyStore[dateKey][i].State = "DONE"
+			TaskState.DailyStore[dateKey][i].ModifyState("DONE")
 			jbytes, _ := json.Marshal(TaskState)
 			WriteToStorageFile(storagePath, jbytes, 0666)
 		}
