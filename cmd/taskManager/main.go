@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"time"
 	"flag"
+	"path/filepath"
+	"os"
+	"log"
 )
 
 func AppendTaskToStorage(taskName string, creationTime time.Time, storagePath string) {
@@ -33,7 +36,12 @@ func main(){
 	state := flag.Bool("state", false, "the state flag allows you to retrieve the current state of your tasks")
 	done := flag.Int("done", -1, "the mod flag allows you to modify the state of a task")
 	flag.Parse()
-	storagePath := "./storage/tasks.json"
+	home, err := os.UserHomeDir()
+	if err != nil{
+		log.Fatal(err)
+	}
+	storagePath := filepath.Join(home,".kinesis-cli","tasks.json")
+	fmt.Printf("Target storage Path: %v\n", storagePath)
 	if *task != "<not-called>"{
 		timeNow := time.Now()
 		canStore, _ := storageHandler.CheckStorage(storagePath)
@@ -49,7 +57,7 @@ func main(){
 	if *state{
 		storageHandler.RenderTaskData(storagePath)
 	}
-    if *done != -1 {
+	if *done != -1 {
 		storageHandler.MarkStateAsDone(*done, storagePath)
 	}
 }

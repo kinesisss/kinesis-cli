@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"encoding/json"	
 	"time"
+	"log"
+	"path/filepath"
 )
 
 type UserTask struct{
@@ -41,9 +43,18 @@ func CheckStorage(dirName string) (bool, error){
 }
 
 func CreateStorage(storageDir string) (os.File, error){
+	home, homeErr := os.UserHomeDir()
+	if homeErr != nil{
+		log.Fatal(homeErr)
+	}
+	targetDir := filepath.Join(home, ".kinesis-cli")
+	err := os.Mkdir(targetDir, 0750)
+	if err != nil && !os.IsExist(err){
+		log.Fatal(err)
+	}
 	rFilePtr, fileErr := os.Create(storageDir)
 	if fileErr != nil{
-		return *rFilePtr, fileErr
+		log.Fatal(fileErr)
 	}
 	dummyTask := TaskStorage{
 		DailyStore: map[string][]UserTask{},
